@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Now Playing</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #0f172a; /* dark outer background */
+            font-family: Arial, sans-serif;
+        }
+
+        .player-card {
+            background-color: teal;
+            border-radius: 25px;
+            padding: 30px;
+            width: 320px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+        .thumbnail {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .song-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .song-einreichung {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .now-playing {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="player-card">
+        <img
+            class="thumbnail"
+            src="https://via.placeholder.com/300x300.png?text=Album+Art"
+            alt="Song Thumbnail"
+            id="thumbnail">
+        <div class="song-title" id="title">Song Title Goes Here</div>
+        <div class="song-einreichung" id="einreichung">By </div>
+    </div>
+<script>
+    function startAutoUpdate() {
+        url = "{{ stats_url }}";
+        async function updateFields() {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                const thumbnail = document.getElementById("thumbnail");
+                const title = document.getElementById("title");
+                const einreichung = document.getElementById("einreichung");
+
+                if (thumbnail && data.thumbnail_url) {
+                    thumbnail.src = data.thumbnail_url;
+                }
+
+                if (title && data.title) {
+                  title.textContent = data.title;
+                }
+
+                if (einreichung && data.user) {
+                    einreichung.textContent = "By " + data.user;
+                }
+
+            } catch (error) {
+                console.error("Error updating fields:", error);
+            }
+        }
+
+        updateFields();
+
+        setInterval(updateFields, 1000);
+    }
+    startAutoUpdate();
+
+</script>
+</body>
+</html>
