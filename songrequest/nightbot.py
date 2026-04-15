@@ -67,9 +67,13 @@ def current_song():
     r = requests.get(CURRENT_SONG_URL, headers=headers)
     response = r.json()
 
+    show_artist = settings.show_artist or response["_currentSong"]["track"]["artist"].lower() in response["_currentSong"]["track"]["title"].lower()
+
+    title = f"{response["_currentSong"]["track"]["artist"]} - {response["_currentSong"]["track"]["title"]}" if show_artist else response["_currentSong"]["track"]["title"]
+
     return {
         "thumbnail_url": response["_currentSong"]["track"]["thumbnailUrl"],
-        "title": f"{response["_currentSong"]["track"]["artist"]} - {response["_currentSong"]["track"]["title"]}",
+        "title": title,
         "user": response["_currentSong"]["user"]["displayName"],
     }
 
