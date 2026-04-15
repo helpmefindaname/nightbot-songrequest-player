@@ -67,7 +67,7 @@ def current_song():
     r = requests.get(CURRENT_SONG_URL, headers=headers)
     response = r.json()
 
-    show_artist = settings.show_artist or response["_currentSong"]["track"]["artist"].lower() in response["_currentSong"]["track"]["title"].lower()
+    show_artist = settings.show_artist and response["_currentSong"]["track"]["artist"].lower() not in response["_currentSong"]["track"]["title"].lower()
 
     title = f"{response["_currentSong"]["track"]["artist"]} - {response["_currentSong"]["track"]["title"]}" if show_artist else response["_currentSong"]["track"]["title"]
 
