@@ -1,4 +1,7 @@
+import json
 import os
+from datetime import datetime, timezone
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, Request
@@ -12,6 +15,7 @@ from songrequest.settings import ApplicationSettings
 
 load_dotenv()
 
+token_path = Path("token.json")
 port = 5000
 settings = ApplicationSettings()
 CLIENT_ID = settings.nightbot_client_id
@@ -22,12 +26,20 @@ AUTH_BASE = "https://api.nightbot.tv/oauth2/authorize"
 TOKEN_URL = "https://api.nightbot.tv/oauth2/token"
 CURRENT_SONG_URL = "https://api.nightbot.tv/1/song_requests/queue"
 SCOPE = ["song_requests_queue"]
+
+token_storage = {}
+if token_path.exists():
+    try:
+        token_storage["token"] = json.loads(token_path.read_text(encoding="utf-8"))
+    except:
+        pass
+
+
 app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
 
 # In production, store per-user in DB
-token_storage = {}
 
 
 @app.get("/login")
@@ -36,7 +48,6 @@ def login():
     authorization_url, state = oauth.authorization_url(AUTH_BASE)
 
     token_storage["state"] = state
-    print(authorization_url)
     return RedirectResponse(authorization_url)
 
 
@@ -48,8 +59,8 @@ async def callback(code: str):
         client_secret=CLIENT_SECRET,
         code=code,
     )
-
     token_storage["token"] = token
+    token_path.write_text(json.dumps(token, indent=4), encoding="utf-8")
     return RedirectResponse("/current-song-page.html")
 
 
@@ -57,7 +68,7 @@ async def callback(code: str):
 def current_song():
     token = token_storage.get("token")
 
-    if not token:
+    if not token or token["expires_at"] < int(datetime.now(timezone.utc).timestamp()):
         return RedirectResponse("/login")
 
     headers = {
@@ -66,8 +77,14 @@ def current_song():
 
     r = requests.get(CURRENT_SONG_URL, headers=headers)
     response = r.json()
+    if response["_currentSong"] is None:
+        return {
+        "thumbnail_url": "",
+        "title": "",
+        "user": "",
+    }
 
-    show_artist = settings.show_artist and response["_currentSong"]["track"]["artist"].lower() not in response["_currentSong"]["track"]["title"].lower()
+    show_artist = settings.show_artist is not None and response["_currentSong"]["track"]["artist"].lower() not in response["_currentSong"]["track"]["title"].lower()
 
     title = f"{response["_currentSong"]["track"]["artist"]} - {response["_currentSong"]["track"]["title"]}" if show_artist else response["_currentSong"]["track"]["title"]
 
