@@ -1,4 +1,5 @@
 @echo off
 cd /d %~dp0
-uv run python -m songrequest.nightbot
+uv sync
+uv run songrequest
 pause

@@ -34,10 +34,10 @@ if token_path.exists():
     except:
         pass
 
-
 app = FastAPI()
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=Path(__file__).parents[1] / "templates")
+
 
 # In production, store per-user in DB
 
@@ -79,14 +79,16 @@ def current_song():
     response = r.json()
     if response["_currentSong"] is None:
         return {
-        "thumbnail_url": "",
-        "title": "",
-        "user": "",
-    }
+            "thumbnail_url": "",
+            "title": "",
+            "user": "",
+        }
 
-    show_artist = settings.show_artist is not None and response["_currentSong"]["track"]["artist"].lower() not in response["_currentSong"]["track"]["title"].lower()
+    show_artist = settings.show_artist is not None and response["_currentSong"]["track"]["artist"].lower() not in \
+                  response["_currentSong"]["track"]["title"].lower()
 
-    title = f"{response["_currentSong"]["track"]["artist"]} - {response["_currentSong"]["track"]["title"]}" if show_artist else response["_currentSong"]["track"]["title"]
+    title = f"{response["_currentSong"]["track"]["artist"]} - {response["_currentSong"]["track"]["title"]}" if show_artist else \
+    response["_currentSong"]["track"]["title"]
 
     return {
         "thumbnail_url": response["_currentSong"]["track"]["thumbnailUrl"],
@@ -108,5 +110,9 @@ def current_song_page(request: Request):
                                       )
 
 
-if __name__ == '__main__':
+def main():
     uvicorn.run(app, port=port)
+
+
+if __name__ == '__main__':
+    main()

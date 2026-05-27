@@ -10,3 +10,16 @@ dependencies = [
     "requests-oauthlib>=2.0.0",
     "uvicorn>=0.40.0",
 ]
+
+[project.scripts]
+songrequest = "songrequest.nightbot:main"
+
+[tool.uv]
+package = true
+
+[tool.setuptools.packages.find]
+include = ["songrequest*"]
+
+[tool.setuptools.package-data]
+songrequest = ["templates/**/*"]
+
